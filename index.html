@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varlık Yönetim Paneli | Kurumsal</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter (Fintech Standardı) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-green: #00c853; /* Banka Yeşili */
+            --primary-dark: #0f1214;  /* Ana Arka Plan */
+            --surface-dark: #1a1f24;  /* Kart Arka Planı */
+            --border-color: #2b333b;  /* İnce Çizgiler */
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background-color: var(--primary-dark);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Sayısal Değerler İçin Özel Ayar */
+        .num-font {
+            font-family: 'Inter', sans-serif;
+            font-variant-numeric: tabular-nums; /* Rakamlar alt alta hizalanır */
+            font-feature-settings: "tnum" 1;
+            letter-spacing: -0.5px;
+        }
+
+        /* Kart Yapısı */
+        .card {
+            background-color: var(--surface-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Form Elemanları */
+        .form-control, .form-select {
+            background-color: #0f1214;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            padding: 0.6rem;
+            border-radius: 8px;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #0f1214;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.1);
+            color: var(--text-main);
+        }
+
+        /* Tablo */
+        .table {
+            --bs-table-bg: transparent;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+        .table thead th {
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table td {
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            padding: 1rem 0.5rem;
+        }
+
+        /* Özel Renkler */
+        .text-bank-green { color: var(--primary-green) !important; }
+        .text-bank-red { color: #ff5252 !important; }
+        
+        /* Vadeli Gösterge Alanı */
+        .balance-display {
+            background: linear-gradient(180deg, #1f252b 0%, #161a1e 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .balance-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--surface-dark);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Badge Asset */
+        .badge-soft {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            font-weight: 500;
+            padding: 0.4em 0.8em;
+        }
+
+        /* Yükleniyor Animasyonu */
+        .skeleton-loader {
+            height: 20px;
+            background: linear-gradient(90deg, #1a1f24 25%, #2b333b 50%, #1a1f24 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+        }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    </style>
+</head>
+<body>
+
+<!-- Üst Menü -->
+<nav class="navbar navbar-expand-lg mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px; height:32px;">
+                <i class="fa-solid fa-shield-halved text-white" style="font-size: 14px;"></i>
+            </div>
+            <span class="fw-bold" style="letter-spacing: -0.5px;">FİNANS<span class="text-bank-green">MOBİL</span></span>
+        </a>
+        
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small d-none d-md-block"><i class="fa-regular fa-clock me-1"></i> Son Güncelleme: <span id="lastUpdate" class="num-font">--:--:--</span></span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="resetSystem()">
+                <i class="fa-solid fa-rotate-right me-1"></i> Sıfırla
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+
+    <!-- Özet Varlık Kartları -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Toplam Net Varlık</h6>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <h2 class="mb-0 fw-bold num-font" id="grandTotal">0,00 ₺</h2>
+                        <span class="badge bg-success bg-opacity-10 text-success px-2 py-1"><i class="fa-solid fa-arrow-trend-up me-1"></i>Aktif</span>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px; background-color: #2b333b;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Yatırım Kar / Zarar</h6>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <h2 class="mb-0 fw-bold num-font" id="totalPL">0,00 ₺</h2>
+                        <span class="text-muted small">Piyasa Değerlemesi</span>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px; background-color: #2b333b;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: 75%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-success border-opacity-25">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Mevduat Getirisi (Tahakkuk)</h6>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <h2 class="mb-0 fw-bold num-font text-bank-green" id="interestSummary">0,00 ₺</h2>
+                        <span class="badge bg-success text-white px-2 py-1">Canlı</span>
+                    </div>
+                    <div class="progress mt-3" style="height: 4px; background-color: #2b333b;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- SOL: Portföy -->
+        <div class="col-lg-8">
+            <!-- Kur Panosu -->
+            <div class="card mb-4">
+                <div class="card-body py-3">
+                    <div class="d-flex overflow-auto gap-4" id="tickerContainer" style="white-space: nowrap;">
+                        <!-- JS ile dolacak -->
+                        <span class="text-muted small">Piyasa verileri alınıyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Varlıklarım ve Portföy</span>
+                    <button class="btn btn-sm btn-link text-decoration-none text-muted" onclick="document.getElementById('assetForm').classList.toggle('d-none')">
+                        <i class="fa-solid fa-plus me-1"></i> Yeni Ekle
+                    </button>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Ekleme Formu (Gizlenebilir) -->
+                    <div id="assetForm" class="bg-dark p-3 rounded mb-4 border border-secondary border-opacity-25 d-none">
+                        <h6 class="text-muted small mb-3">YENİ VARLIK GİRİŞİ</h6>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="text-muted small mb-1">Menkul Kıymet</label>
+                                <select id="assetType" class="form-select">
+                                    <option value="ALTIN">Gram Altın (XAU/TRY)</option>
+                                    <option value="GUMUS">Gram Gümüş (XAG/TRY)</option>
+                                    <option value="USD">Amerikan Doları (USD)</option>
+                                    <option value="EUR">Euro (EUR)</option>
+                                    <option value="BTC">Bitcoin (BTC)</option>
+                                    <option value="ETH">Ethereum (ETH)</option>
+                                    <option value="AVAX">Avax (AVAX)</option>
+                                    <option value="XRP">Ripple (XRP)</option>
+                                    <option value="ADA">Cardano (ADA)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="text-muted small mb-1">Miktar (Adet/Gr)</label>
+                                <input type="number" id="assetAmount" class="form-control" placeholder="0.00">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="text-muted small mb-1">Ort. Maliyet (TL)</label>
+                                <input type="number" id="assetCost" class="form-control" placeholder="0.00">
+                            </div>
+                            <div class="col-md-3">
+                                <button onclick="addAsset()" class="btn btn-success w-100 fw-medium">Kaydet</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Menkul Kıymet</th>
+                                    <th class="text-end">Miktar</th>
+                                    <th class="text-end">Maliyet</th>
+                                    <th class="text-end">Piyasa Fiyatı</th>
+                                    <th class="text-end">Toplam Tutar</th>
+                                    <th class="text-end">Kar / Zarar</th>
+                                    <th class="text-end">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolioList">
+                                <!-- JS Dolduracak -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ: Vadeli Mevduat -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-success bg-opacity-10 text-success border-bottom border-success border-opacity-25">
+                    <i class="fa-solid fa-vault me-2"></i>E-Mevduat Hesabı
+                </div>
+                <div class="card-body">
+                    
+                    <div class="balance-display mb-4">
+                        <div class="text-muted text-uppercase small mb-2" style="letter-spacing: 1px;">Toplam Bakiye</div>
+                        <div class="balance-amount num-font text-bank-green" id="vadeliTotalBalance">0,00 ₺</div>
+                        <div class="d-flex justify-content-center gap-3 mt-2">
+                            <small class="text-muted num-font"><i class="fa-solid fa-caret-up text-success me-1"></i>Net Kazanç: <span id="vadeliProfit" class="text-white">0,00</span></small>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark p-3 rounded border border-secondary border-opacity-25">
+                        <h6 class="text-muted small mb-3 border-bottom border-secondary border-opacity-25 pb-2">HESAP AYARLARI</h6>
+                        
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Ana Para (TL)</label>
+                            <input type="number" id="vadeliAnaPara" class="form-control fw-bold" value="100000">
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="small text-muted mb-1">Faiz Oranı (%)</label>
+                                <input type="number" id="vadeliFaiz" class="form-control" value="48">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted mb-1">Vade (Gün)</label>
+                                <input type="number" id="vadeliGun" class="form-control" value="32">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Valör (Başlangıç) Tarihi</label>
+                            <input type="datetime-local" id="vadeliStartDate" class="form-control">
+                        </div>
+
+                        <button onclick="calculateVadeli(true)" class="btn btn-outline-success w-100 btn-sm">
+                            Hesapla ve Güncelle
+                        </button>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary fw-normal num-font" id="timeElapsed">Süre: 0g 0s 0dk 0sn</span>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="alert alert-dark mt-3 d-flex align-items-start border-0 bg-opacity-50">
+                <i class="fa-solid fa-circle-info text-muted mt-1 me-2"></i>
+                <div class="small text-muted lh-sm">
+                    Bu ekrandaki veriler bilgilendirme amaçlıdır. Altın ve Gümüş fiyatları uluslararası piyasalardan anlık alınarak TL'ye çevrilmektedir. Kripto varlıklar Binance piyasasından sağlanır.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JAVASCRIPT ENGINE -->
+<script>
+    // --- KONFIGÜRASYON VE DEĞİŞKENLER ---
+    let portfolio = JSON.parse(localStorage.getItem('bankPortfolio')) || [];
+    let vadeliSettings = JSON.parse(localStorage.getItem('bankVadeliSettings')) || null;
+    
+    // Anlık Fiyatlar (Varsayılan 0)
+    let marketData = {
+        'USD': 0, 'EUR': 0, 
+        'ALTIN': 0, 'GUMUS': 0,
+        'BTC': 0, 'ETH': 0, 'AVAX': 0, 'XRP': 0, 'ADA': 0
+    };
+
+    let vadeliAnimation; // Animasyon Frame ID
+
+    // --- BAŞLATMA ---
+    document.addEventListener("DOMContentLoaded", function() {
+        // Websocket Bağlantısı
+        initMarketStream();
+        
+        // Vadeli Ayarları Yükle
+        if(vadeliSettings) {
+            document.getElementById('vadeliAnaPara').value = vadeliSettings.anaPara;
+            document.getElementById('vadeliFaiz').value = vadeliSettings.faiz;
+            document.getElementById('vadeliGun').value = vadeliSettings.gun;
+            document.getElementById('vadeliStartDate').value = vadeliSettings.startDate;
+            calculateVadeli(false); // Kayıt etmeden başlat
+        } else {
+            setNowDate();
+        }
+        
+        // Tabloyu Çiz
+        renderPortfolio();
+    });
+
+    function setNowDate() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('vadeliStartDate').value = now.toISOString().slice(0,16);
+    }
+
+    // --- PİYASA VERİ AKIŞI (BINANCE WEBSOCKET) ---
+    function initMarketStream() {
+        const streams = [
+            "usdttry@trade",    // Dolar/TL (Referans)
+            "eurusdt@trade",    // Euro (USDT üzerinden)
+            "paxgusdt@trade",   // Ons Altın (PAXG)
+            "btcusdt@trade", "ethusdt@trade", "avaxusdt@trade", 
+            "xrpusdt@trade", "adausdt@trade"
+        ];
+        
+        // Gümüş (XAG) Futures'dan, Diğerleri Spot'tan
+        // Tek bağlantı altında birleştiremeyiz (farklı URL), o yüzden 2 socket açacağız.
+        
+        // 1. Ana Socket
+        const wsMain = new WebSocket("wss://stream.binance.com:9443/stream?streams=" + streams.join('/'));
+        
+        wsMain.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            handlePriceUpdate(msg.stream, parseFloat(msg.data.p));
+            updateTimestamp();
+        };
+
+        // 2. Gümüş Socket (Futures)
+        const wsSilver = new WebSocket("wss://fstream.binance.com/stream?streams=xagusdt@aggTrade");
+        wsSilver.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if(msg.data.p) {
+                // Özel Handle: XAG
+                handlePriceUpdate('xagusdt', parseFloat(msg.data.p));
+            }
+        };
+
+        wsMain.onclose = () => setTimeout(initMarketStream, 5000); // Otomatik tekrar bağlan
+    }
+
+    function handlePriceUpdate(streamName, price) {
+        if(streamName.includes('usdttry')) marketData['USD'] = price;
+        
+        // Tüm hesaplamalar Dolar/TL kurunun gelmesine bağlıdır
+        if(marketData['USD'] > 0) {
+            if(streamName.includes('eurusdt')) marketData['EUR'] = price * marketData['USD'];
+            else if(streamName.includes('paxgusdt')) marketData['ALTIN'] = (price / 31.1035) * marketData['USD']; // Ons -> Gram
+            else if(streamName.includes('xagusdt')) marketData['GUMUS'] = (price / 31.1035) * marketData['USD']; // Ons -> Gram
+            else if(streamName.includes('btcusdt')) marketData['BTC'] = price * marketData['USD'];
+            else if(streamName.includes('ethusdt')) marketData['ETH'] = price * marketData['USD'];
+            else if(streamName.includes('avaxusdt')) marketData['AVAX'] = price * marketData['USD'];
+            else if(streamName.includes('xrpusdt')) marketData['XRP'] = price * marketData['USD'];
+            else if(streamName.includes('adausdt')) marketData['ADA'] = price * marketData['USD'];
+            
+            // Veri geldikçe UI güncelle
+            updateTickerUI();
+            renderPortfolio();
+        }
+    }
+
+    // --- ARAYÜZ GÜNCELLEMELERİ ---
+    
+    // Üstteki kayan kur panosu
+    function updateTickerUI() {
+        const container = document.getElementById('tickerContainer');
+        const assets = ['USD', 'EUR', 'ALTIN', 'GUMUS']; // Gösterilecek öncelikli varlıklar
+        
+        let html = '';
+        assets.forEach(key => {
+            if(marketData[key] > 0) {
+                html += `
+                    <div class="d-flex flex-column">
+                        <span class="text-muted small fw-bold" style="font-size:0.7rem">${key}/TRY</span>
+                        <span class="fw-bold num-font text-white">${formatMoney(marketData[key], false)}</span>
+                    </div>
+                    <div class="vr bg-secondary opacity-25"></div>
+                `;
+            }
+        });
+        container.innerHTML = html;
+    }
+
+    function updateTimestamp() {
+        const d = new Date();
+        document.getElementById('lastUpdate').innerText = d.toLocaleTimeString();
+    }
+
+    // Portföy Tablosu
+    function renderPortfolio() {
+        const tbody = document.getElementById('portfolioList');
+        tbody.innerHTML = '';
+        
+        let totalAssets = 0;
+        let totalCostBase = 0;
+
+        portfolio.forEach((item, index) => {
+            const price = marketData[item.type] || 0;
+            const totalVal = price * item.amount;
+            const costVal = item.cost * item.amount;
+            const profit = totalVal - costVal;
+
+            totalAssets += totalVal;
+            totalCostBase += costVal;
+
+            const profitClass = profit >= 0 ? 'text-bank-green' : 'text-bank-red';
+            const profitIcon = profit >= 0 ? '+' : '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>
+                        <span class="badge badge-soft">${item.type}</span>
+                    </td>
+                    <td class="text-end num-font">${item.amount}</td>
+                    <td class="text-end num-font text-muted">${formatMoney(item.cost)}</td>
+                    <td class="text-end num-font fw-medium">${formatMoney(price)}</td>
+                    <td class="text-end num-font fw-bold text-white">${formatMoney(totalVal)}</td>
+                    <td class="text-end num-font fw-bold ${profitClass}">${profitIcon}${formatMoney(profit)}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-link text-muted p-0" onclick="removeAsset(${index})"><i class="fa-regular fa-trash-can"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Toplamları Yaz
+        let grandPL = totalAssets - totalCostBase;
+        document.getElementById('totalPL').innerText = (grandPL>=0?'+':'') + formatMoney(grandPL);
+        document.getElementById('totalPL').className = "mb-0 fw-bold num-font " + (grandPL>=0?'text-bank-green':'text-bank-red');
+        
+        // Global değişken (Vadeli ile birleşmek için)
+        window.currentPortfolioValue = totalAssets;
+        
+        // Eğer vadeli çalışmıyorsa direkt yaz
+        if(!vadeliAnimation) {
+             document.getElementById('grandTotal').innerText = formatMoney(totalAssets);
+        }
+    }
+
+    // --- İŞLEM FONKSİYONLARI ---
+    function addAsset() {
+        const type = document.getElementById('assetType').value;
+        const amount = parseFloat(document.getElementById('assetAmount').value);
+        const cost = parseFloat(document.getElementById('assetCost').value);
+
+        if(!amount || !cost) return;
+
+        portfolio.push({ type, amount, cost });
+        localStorage.setItem('bankPortfolio', JSON.stringify(portfolio));
+        
+        // Inputları temizle ve formu gizle
+        document.getElementById('assetAmount').value = '';
+        document.getElementById('assetCost').value = '';
+        document.getElementById('assetForm').classList.add('d-none');
+        
+        renderPortfolio();
+    }
+
+    function removeAsset(index) {
+        if(confirm('Bu varlık kaydı portföyden silinecek. Onaylıyor musunuz?')) {
+            portfolio.splice(index, 1);
+            localStorage.setItem('bankPortfolio', JSON.stringify(portfolio));
+            renderPortfolio();
+        }
+    }
+
+    function resetSystem() {
+        if(confirm('Tüm kayıtlarınız ve ayarlarınız silinecek. Emin misiniz?')) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // --- VADELİ MEVDUAT MOTORU (Precision Engine) ---
+    function calculateVadeli(save = true) {
+        if(vadeliAnimation) cancelAnimationFrame(vadeliAnimation);
+
+        const anaPara = parseFloat(document.getElementById('vadeliAnaPara').value);
+        const faiz = parseFloat(document.getElementById('vadeliFaiz').value);
+        const gun = parseFloat(document.getElementById('vadeliGun').value);
+        const startDateStr = document.getElementById('vadeliStartDate').value;
+
+        if(!anaPara || !startDateStr) return;
+
+        if(save) {
+            const settings = { anaPara, faiz, gun, startDate: startDateStr };
+            localStorage.setItem('bankVadeliSettings', JSON.stringify(settings));
+        }
+
+        const startMs = new Date(startDateStr).getTime();
+        const durationMs = gun * 24 * 60 * 60 * 1000;
+        
+        // Net Getiri Hesabı (%5 Stopaj Düşülmüş)
+        // Bankacılık Standart Formülü: (Anapara * Faiz * Gün / 36500)
+        const grossProfit = (anaPara * faiz * gun) / 36500;
+        const netProfitTotal = grossProfit * 0.95; 
+        
+        // Saniyelik değil, milisaniyelik kazanç katsayısı
+        const profitPerMs = netProfitTotal / durationMs;
+
+        const loop = () => {
+            const now = Date.now();
+            const elapsed = now - startMs;
+            
+            let currentProfit = 0;
+            
+            if(elapsed >= durationMs) {
+                currentProfit = netProfitTotal; // Vade doldu
+                document.getElementById('timeElapsed').innerText = "Vade Tamamlandı";
+            } else if(elapsed > 0) {
+                currentProfit = elapsed * profitPerMs;
+                updateTimeDisplay(elapsed);
+            } else {
+                document.getElementById('timeElapsed').innerText = "Beklemede (İleri Tarihli Valör)";
+            }
+
+            // UI Güncelleme (Yüksek Hassasiyet)
+            // Sadece kar kısmını göster
+            document.getElementById('vadeliProfit').innerText = formatMoney(currentProfit); 
+            // Ana para + Kar
+            const totalBankBalance = anaPara + currentProfit;
+            document.getElementById('vadeliTotalBalance').innerText = formatMoney(totalBankBalance);
+            
+            // Özet Kartına Yansıt
+            document.getElementById('interestSummary').innerText = formatMoney(currentProfit);
+
+            // Büyük Toplam (Portföy + Mevduat)
+            const pVal = window.currentPortfolioValue || 0;
+            document.getElementById('grandTotal').innerText = formatMoney(pVal + totalBankBalance);
+
+            if(elapsed < durationMs) {
+                vadeliAnimation = requestAnimationFrame(loop);
+            }
+        };
+
+        loop();
+    }
+
+    function updateTimeDisplay(ms) {
+        let seconds = Math.floor(ms / 1000);
+        let minutes = Math.floor(seconds / 60);
+        let hours = Math.floor(minutes / 60);
+        let days = Math.floor(hours / 24);
+
+        hours %= 24;
+        minutes %= 60;
+        seconds %= 60;
+
+        document.getElementById('timeElapsed').innerText = `Süre: ${days}g ${hours}s ${minutes}dk ${seconds}sn`;
+    }
+
+    // --- YARDIMCI FORMATLAMA ---
+    function formatMoney(amount, withSymbol = true) {
+        // Türkçe format: Binlik ayırıcı nokta, kuruş ayırıcı virgül
+        let formatted = amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return withSymbol ? formatted + ' ₺' : formatted;
+    }
+
+</script>
+
+</body>
+</html>
